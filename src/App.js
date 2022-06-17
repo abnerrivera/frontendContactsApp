@@ -1,23 +1,97 @@
-import logo from './logo.svg';
+import axios from 'axios';
+import { useState, useEffect } from 'react';
 import './App.css';
+import CardContact from './components/CardContact/CardContact';
+import NavSearch from './components/NavSearch/NavSearch';
 
 function App() {
+
+  const [data, setData] = useState([]);
+
+  const [search, setSearch] = useState();
+
+  const [load, setLoad] = useState(false)
+
+
+  const getContacts = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3000/contacts`);
+      setData(response.data)
+    } catch (error) {
+      return null;
+    }
+  }
+
+  const deleteContact = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/contacts/${id}`);
+      setLoad(!load);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  const updateContact = async (id) => {
+    await axios.put(`http://localhost:3000/contacts/${id}`);
+  }
+
+
+  useEffect(() => {
+    getContacts();
+  }, [search, load])
+
+
+  const valueSearch = data.filter(contact => contact.name === search)
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
+      {/* search */}
+      <NavSearch
+        setSearch={setSearch}
+        setLoad={() => setLoad(!load)}
+      />
+
+      {/* main */}
+
+      {search ? (
+        valueSearch.map((contact, index) => (
+          <CardContact
+            idContact={contact.id}
+            setLoad={() => setLoad(!load)}
+            key={index}
+            name={contact.name}
+            phone={contact.phone}
+            birthDay={contact.date_birth}
+            address={contact.address}
+            email={contact.email}
+
+            onClickDelete={() => deleteContact(contact.id)}
+            onClickUpdate={updateContact}
+          />
+        ))
+      ) :
+        (
+          data.map((contact, index) => (
+            <CardContact
+              idContact={contact.id}
+              setLoad={() => setLoad(!load)}
+              key={index}
+              name={contact.name}
+              phone={contact.phone}
+              birthDay={contact.date_birth}
+              address={contact.address}
+              email={contact.email}
+
+              onClickDelete={() => deleteContact(contact.id)}
+              onClickUpdate={updateContact}
+            />
+          ))
+        )
+
+      }
+
+
     </div>
   );
 }
